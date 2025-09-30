@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - QR Generator | Sưu Tầm Dấu Chân Bính Ngọ 2026</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="print.css">
+    <style>
+        @media print {
+            .no-print { display: none !important; }
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div id="app"></div>
+    
+    <script type="module">
+        // Import React và render QRGenerator component
+        import React from 'https://esm.sh/react@18';
+        import ReactDOM from 'https://esm.sh/react-dom@18/client';
+        
+        // Landmarks data - Dữ liệu thực tế từ Núi Bà Đen
+        const LANDMARKS = [
+            { id: 'ga-ba-den', name: 'Ga Bà Đen', points: 25, description: 'Nhà ga cáp treo Sun World Ba Den Mountain, không chỉ giữ kỷ lục Guinness là "Nhà ga cáp treo lớn nhất thế giới" mà còn là một tác phẩm kiến trúc nghệ thuật.' },
+            { id: 'chua-ba', name: 'Chùa Linh Sơn Tiên Thạch - Chùa Bà', points: 40, description: 'Ngôi chùa lâu đời nhất tại Tây Ninh, một trong những điểm đến tâm linh quan trọng, gắn liền với truyền thuyết về Linh Sơn Thánh Mẫu.' },
+            { id: 'dien-ba-linh-son', name: 'Điện Bà Linh Sơn Thánh Mẫu', points: 45, description: 'Nơi thờ chính Linh Sơn Thánh Mẫu, vị thần bảo hộ của Núi Bà Đen, không gian linh thiêng, trang trọng, thu hút đông đảo du khách đến chiêm bái.' },
+            { id: 'chua-hang', name: 'Chùa Linh Sơn Long Châu - Chùa Hang', points: 35, description: 'Ngôi chùa cổ kính nằm ẩn mình trong hang động tự nhiên, không gian thanh tịnh, huyền bí, mang đến trải nghiệm tâm linh độc đáo.' },
+            { id: 'tuong-phat-ba', name: 'Tượng Phật Bà Tây Bổ Đà Sơn', points: 50, description: 'Tượng Phật Bà bằng đồng cao nhất châu Á tọa lạc trên đỉnh núi (72m, đúc từ 170 tấn đồng đỏ), ở độ cao gần 1000m. Là biểu tượng tâm linh và điểm nhấn nổi bật.' },
+            { id: 'ga-van-son', name: 'Ga Vân Sơn', points: 30, description: 'Nhà ga cáp treo di chuyển từ chân núi và ngược lại, kiến trúc hiện đại, tích hợp nhiều tiện ích như khu mua sắm, nhà hàng và khu vực ngắm cảnh.' },
+            { id: 'cong-troi', name: 'Cổng Trời', points: 35, description: 'Điểm check-in nổi tiếng tại Núi Bà Đen, mở ra khung cảnh tuyệt đẹp để ngắm bình minh, săn mây, và tận hưởng không gian bao la của đất trời.' },
+            { id: 'dinh-nui-986m', name: 'Chóp đỉnh Núi Bà Đen 986m', points: 50, description: 'Cột mốc check-in chinh phục "Nóc nhà Nam Bộ 986m". Điểm cao nhất của hành trình, nơi du khách có thể tự hào về thành tựu chinh phục đỉnh núi.' },
+            { id: 'chua-trung', name: 'Chùa Linh Sơn Phước Trung - Chùa Trung', points: 25, description: 'Ngôi chùa cổ kính, điểm dừng chân đầu tiên trong hành trình tâm linh tại Núi Bà Đen, mang đến không gian thanh tịnh và an yên.' },
+            { id: 'tru-kinh-bat-nha', name: 'Trụ Kinh Bát Nhã', points: 40, description: 'Trụ kinh Bát Nhã bằng đá granite đen, cao 19,8m, khắc bộ kinh Bát Nhã bằng chữ Tây Tạng, thể hiện sự uy nghi và linh thiêng.' },
+            { id: 'phat-di-lac', name: 'Tượng Phật Di Lặc', points: 40, description: 'Tượng Phật Di Lặc bằng đá sa thạch lớn nhất thế giới. Mang ý nghĩa về niềm vui và hạnh phúc, là điểm cầu may mắn của nhiều du khách.' },
+            { id: 'dong-kim-quang', name: 'Căn cứ Động Kim Quang', points: 30, description: 'Di tích lịch sử quan trọng, là căn cứ cách mạng của Huyện Ủy Tòa Thánh trong thời kỳ kháng chiến, ghi dấu những chiến công oanh liệt.' },
+            { id: 'chua-hoa-dong', name: 'Chùa Hoà Đồng', points: 30, description: 'Ngôi chùa tọa lạc ở lưng chừng núi, với tầm nhìn bao quát xuống đồng bằng xanh mướt, không gian thanh tịnh và kiến trúc độc đáo.' },
+            { id: 'nha-hang-tam-an', name: 'Nhà hàng Tâm An', points: 20, description: 'Nhà hàng buffet trên đỉnh núi, phục vụ hơn 80 món ăn đa dạng, từ ẩm thực địa phương đến các món ăn quốc tế, trong không gian rộng rãi và tầm nhìn bao quát.' },
+            { id: 'trung-tam-phat-giao', name: 'Trung tâm triển lãm Phật giáo', points: 25, description: 'Nơi trưng bày các hiện vật mô phỏng, tư liệu quý giá về Phật giáo, giúp du khách hiểu sâu hơn về lịch sử, triết lý và nghệ thuật Phật giáo.' }
+        ];
+        
+        // QR Generator function
+        const generateQRCodeURL = (landmarkId) => {
+            const baseURL = 'https://api.qrserver.com/v1/create-qr-code/';
+            const params = new URLSearchParams({
+                size: '300x300',
+                data: landmarkId,
+                format: 'png',
+                bgcolor: 'ffffff',
+                color: '000000',
+                margin: '10',
+                ecc: 'M'
+            });
+            return `${baseURL}?${params.toString()}`;
+        };
+        
+        // QR Generator Component
+        const QRGenerator = () => {
+            const printAllQRs = () => {
+                window.print();
+            };
+            
+            const downloadQR = (landmarkId, landmarkName) => {
+                const qrURL = generateQRCodeURL(landmarkId);
+                const link = document.createElement('a');
+                link.href = qrURL;
+                link.download = `QR-${landmarkId}.png`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            };
+            
+            return React.createElement('div', { className: 'p-6 bg-gray-50 min-h-screen' },
+                React.createElement('div', { className: 'max-w-6xl mx-auto' },
+                    // Header
+                    React.createElement('div', { className: 'text-center mb-8 no-print' },
+                        React.createElement('h1', { className: 'text-3xl font-bold text-gray-800 mb-4' },
+                            '🎯 QR Code Generator - Sưu Tầm Dấu Chân Bính Ngọ 2026'
+                        ),
+                        React.createElement('p', { className: 'text-gray-600 mb-6' },
+                            'In các mã QR này và dán tại các địa điểm tương ứng'
+                        ),
+                        React.createElement('button', {
+                            onClick: printAllQRs,
+                            className: 'bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors font-semibold'
+                        }, '🖨️ In tất cả QR Codes')
+                    ),
+                    
+                    // QR Grid
+                    React.createElement('div', { className: 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6' },
+                        LANDMARKS.map(landmark =>
+                            React.createElement('div', {
+                                key: landmark.id,
+                                className: 'bg-white p-6 rounded-xl shadow-lg qr-card'
+                            },
+                                React.createElement('div', { className: 'text-center' },
+                                    React.createElement('h3', { className: 'text-lg font-bold text-gray-800 mb-2' },
+                                        landmark.name
+                                    ),
+                                    React.createElement('div', { className: 'bg-gray-50 p-4 rounded-lg mb-4' },
+                                        React.createElement('img', {
+                                            src: generateQRCodeURL(landmark.id),
+                                            alt: `QR Code for ${landmark.name}`,
+                                            className: 'mx-auto w-48 h-48',
+                                            style: { imageRendering: 'pixelated' }
+                                        })
+                                    ),
+                                    React.createElement('div', { className: 'text-sm text-gray-600 mb-4' },
+                                        React.createElement('p', { className: 'font-semibold text-yellow-600' },
+                                            `+${landmark.points} điểm`
+                                        ),
+                                        React.createElement('p', { className: 'mt-2' },
+                                            landmark.description
+                                        ),
+                                        React.createElement('p', { className: 'mt-2 font-mono text-xs bg-gray-100 p-2 rounded' },
+                                            `ID: ${landmark.id}`
+                                        )
+                                    ),
+                                    React.createElement('button', {
+                                        onClick: () => downloadQR(landmark.id, landmark.name),
+                                        className: 'bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors text-sm no-print'
+                                    }, '📥 Tải xuống')
+                                )
+                            )
+                        )
+                    ),
+                    
+                    // Instructions
+                    React.createElement('div', { className: 'mt-8 bg-yellow-50 border border-yellow-200 rounded-lg p-6 no-print' },
+                        React.createElement('h3', { className: 'text-lg font-bold text-yellow-800 mb-3' },
+                            '📋 Hướng dẫn sử dụng:'
+                        ),
+                        React.createElement('ol', { className: 'list-decimal list-inside text-yellow-700 space-y-2' },
+                            React.createElement('li', null, 'In tất cả QR codes bằng nút "In tất cả QR Codes"'),
+                            React.createElement('li', null, 'Cắt từng QR code theo khung'),
+                            React.createElement('li', null, 'Dán QR code tại địa điểm tương ứng'),
+                            React.createElement('li', null, 'Đảm bảo QR code được dán ở vị trí dễ thấy và quét được'),
+                            React.createElement('li', null, 'Kiểm tra QR code hoạt động bằng app trước khi sự kiện')
+                        )
+                    ),
+                    
+                    // Warnings
+                    React.createElement('div', { className: 'mt-6 bg-red-50 border border-red-200 rounded-lg p-6 no-print' },
+                        React.createElement('h3', { className: 'text-lg font-bold text-red-800 mb-3' },
+                            '⚠️ Lưu ý quan trọng:'
+                        ),
+                        React.createElement('ul', { className: 'list-disc list-inside text-red-700 space-y-2' },
+                            React.createElement('li', null, 'Mỗi QR code chỉ có thể check-in một lần cho mỗi người chơi'),
+                            React.createElement('li', null, 'QR code phải được quét bằng app chính thức'),
+                            React.createElement('li', null, 'Không chia sẻ QR code trên mạng xã hội'),
+                            React.createElement('li', null, 'Bảo vệ QR code khỏi thời tiết và hư hỏng')
+                        )
+                    )
+                )
+            );
+        };
+        
+        // Render app
+        const root = ReactDOM.createRoot(document.getElementById('app'));
+        root.render(React.createElement(QRGenerator));
+    </script>
+</body>
+</html>

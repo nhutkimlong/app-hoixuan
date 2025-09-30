@@ -1,0 +1,72 @@
+/* CSS cho in QR codes */
+@media print {
+  @page {
+    size: A4;
+    margin: 1cm;
+  }
+  
+  body {
+    font-size: 12pt;
+    line-height: 1.4;
+  }
+  
+  .print\:hidden {
+    display: none !important;
+  }
+  
+  .print\:grid-cols-2 {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  
+  .print\:w-32 {
+    width: 8rem !important;
+  }
+  
+  .print\:h-32 {
+    height: 8rem !important;
+  }
+  
+  .print\:text-base {
+    font-size: 1rem !important;
+  }
+  
+  .print\:text-xs {
+    font-size: 0.75rem !important;
+  }
+  
+  .print\:bg-white {
+    background-color: white !important;
+  }
+  
+  .print\:bg-gray-50 {
+    background-color: #f9fafb !important;
+  }
+  
+  .print\:border-2 {
+    border-width: 2px !important;
+  }
+  
+  .print\:border-gray-300 {
+    border-color: #d1d5db !important;
+  }
+  
+  .print\:shadow-none {
+    box-shadow: none !important;
+  }
+  
+  .print\:break-inside-avoid {
+    break-inside: avoid !important;
+  }
+  
+  /* Đảm bảo QR codes không bị cắt */
+  .qr-card {
+    page-break-inside: avoid;
+    margin-bottom: 1cm;
+  }
+  
+  /* Ẩn các element không cần thiết khi in */
+  button:not(.print-button),
+  .no-print {
+    display: none !important;
+  }
+}

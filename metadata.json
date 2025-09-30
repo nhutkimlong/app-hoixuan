@@ -1,0 +1,7 @@
+{
+  "name": "Sưu Tầm Dấu Chân Bính Ngọ 2026",
+  "description": "Web-app tham gia sự kiện 'Sưu Tầm Dấu Chân Bính Ngọ' tại Hội Xuân Núi Bà Đen 2026. Quét mã QR, thu thập dấu chân, khám phá bản đồ và nhận chứng nhận điện tử.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
