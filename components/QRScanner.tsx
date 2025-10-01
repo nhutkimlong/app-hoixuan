@@ -33,11 +33,8 @@ const QRScanner: React.FC<QRScannerProps> = ({ onScanSuccess, onScanError, isAct
       setDebugInfo('Đang khởi động scanner...');
       console.log('Starting QR scanner...');
       
-      // Kiểm tra quyền camera trước
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-      console.log('Camera permission granted, stream:', stream);
-      setDebugInfo('Đã có quyền camera, đang khởi tạo...');
-      stream.getTracks().forEach(track => track.stop()); // Dừng stream test
+      // Không test quyền camera trước - để html5-qrcode tự xử lý
+      setDebugInfo('Đang khởi tạo scanner...');
       
       const config = {
         fps: 10,
@@ -45,10 +42,14 @@ const QRScanner: React.FC<QRScannerProps> = ({ onScanSuccess, onScanError, isAct
         aspectRatio: 1.0,
         supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA],
         showTorchButtonIfSupported: true,
-        showZoomSliderIfSupported: false, // Tắt zoom để tránh conflict
-        // Đơn giản hóa cấu hình
+        showZoomSliderIfSupported: false,
+        // Ưu tiên camera sau
         videoConstraints: {
-          facingMode: "environment"
+          facingMode: { ideal: "environment" }
+        },
+        // Cấu hình camera mặc định
+        defaultCameraIdOrVideoConstraints: {
+          facingMode: { ideal: "environment" }
         }
       };
 
@@ -103,6 +104,7 @@ const QRScanner: React.FC<QRScannerProps> = ({ onScanSuccess, onScanError, isAct
           scannerRef.current = scanner;
         } catch (initError) {
           console.error('Scanner initialization failed:', initError);
+          setDebugInfo(`Lỗi khởi tạo: ${initError instanceof Error ? initError.message : 'Unknown error'}`);
           setIsLoading(false);
           onScanError?.('Lỗi khởi tạo scanner. Vui lòng tải lại trang.');
         }
@@ -121,6 +123,9 @@ const QRScanner: React.FC<QRScannerProps> = ({ onScanSuccess, onScanError, isAct
         } else if (error.name === 'NotReadableError') {
           errorMessage = 'Camera đang được sử dụng bởi ứng dụng khác';
         }
+        setDebugInfo(`Lỗi camera: ${error.message}`);
+      } else {
+        setDebugInfo(`Lỗi không xác định: ${String(error)}`);
       }
       
       onScanError?.(errorMessage);
@@ -177,6 +182,11 @@ const QRScanner: React.FC<QRScannerProps> = ({ onScanSuccess, onScanError, isAct
             <p className="text-xs text-blue-600">
               Giữ camera ổn định và đảm bảo QR code nằm trong khung vuông
             </p>
+            {debugInfo && (
+              <p className="text-xs text-gray-500 mt-2 italic">
+                Debug: {debugInfo}
+              </p>
+            )}
           </div>
         </div>
       )}
