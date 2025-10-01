@@ -106,12 +106,12 @@ const MapView: React.FC<MapViewProps> = ({ checkedInLandmarks, onCheckInPrompt }
 
 
   return (
-    <div className="h-full w-full relative flex flex-col">
+    <div className="h-full w-full relative">
       <MapContainer 
         center={centerPosition} 
         zoom={15} 
         scrollWheelZoom={true} 
-        className="flex-1 min-h-0"
+        className="map-container"
         whenReady={() => {
           // Force map to invalidate size when ready
           setTimeout(() => {
@@ -193,13 +193,13 @@ const MapView: React.FC<MapViewProps> = ({ checkedInLandmarks, onCheckInPrompt }
       </MapContainer>
       
       {/* Nút định vị người dùng */}
-      <div className="absolute bottom-4 right-4 z-[1000]">
+      <div className="absolute map-overlay right-4 z-[1000]">
         <UserLocationButton onLocationFound={handleLocationFound} />
       </div>
       
       {/* Danh sách điểm gần nhất - Hiển thị ở phía dưới */}
       {showNearbyList && (
-        <div className="absolute bottom-16 left-4 right-4 z-[1001]">
+        <div className="absolute map-overlay left-4 right-4 z-[1001]" style={{ bottom: '4.5rem' }}>
           <div className="bg-white rounded-lg shadow-xl border border-gray-200 max-h-64 overflow-y-auto">
             <div className="flex justify-between items-center p-3 border-b bg-blue-50 sticky top-0 z-10">
               <h3 className="font-bold text-blue-800 flex items-center">

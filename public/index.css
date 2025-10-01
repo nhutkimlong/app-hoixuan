@@ -1,0 +1,38 @@
+/* Additional utility classes for better layout */
+
+/* Ensure map views fit properly within the layout */
+.map-container {
+  height: calc(100vh - 8rem); /* Account for navigation (4rem) + padding (4rem) */
+  min-height: 400px; /* Minimum height for usability */
+}
+
+/* For mobile devices, adjust the height calculation */
+@media (max-height: 600px) {
+  .map-container {
+    height: calc(100vh - 6rem);
+    min-height: 300px;
+  }
+}
+
+/* Ensure proper scrolling for content areas */
+.content-area {
+  max-height: calc(100vh - 8rem);
+  overflow-y: auto;
+}
+
+/* Fix for leaflet map in flex containers */
+.leaflet-container {
+  height: 100% !important;
+  width: 100% !important;
+}
+
+/* Ensure proper spacing for overlays */
+.map-overlay {
+  bottom: 1rem;
+}
+
+@media (max-height: 600px) {
+  .map-overlay {
+    bottom: 0.5rem;
+  }
+}
