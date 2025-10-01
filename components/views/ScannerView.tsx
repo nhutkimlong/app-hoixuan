@@ -3,6 +3,8 @@ import React, { useState } from 'react';
 import { LANDMARKS } from '../../constants';
 import { CheckBadgeIcon, QrCodeIcon } from '../icons/ActionIcons';
 import QRScanner from '../QRScanner';
+import QRScannerSimple from '../QRScannerSimple';
+import QRScannerFixed from '../QRScannerFixed';
 
 interface ScannerViewProps {
   onCheckIn: (landmarkId: string) => void;
@@ -12,6 +14,7 @@ interface ScannerViewProps {
 const ScannerView: React.FC<ScannerViewProps> = ({ onCheckIn, checkedInLandmarks }) => {
   const [isScanning, setIsScanning] = useState(false);
   const [scanError, setScanError] = useState<string | null>(null);
+  const [useSimpleScanner, setUseSimpleScanner] = useState(false);
 
   const handleScanSuccess = (decodedText: string) => {
     console.log('Scanned QR:', decodedText);
@@ -75,7 +78,7 @@ const ScannerView: React.FC<ScannerViewProps> = ({ onCheckIn, checkedInLandmarks
           </div>
         ) : (
           <div>
-            <QRScanner
+            <QRScannerFixed
               onScanSuccess={handleScanSuccess}
               onScanError={handleScanError}
               isActive={isScanning}

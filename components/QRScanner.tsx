@@ -21,8 +21,17 @@ const QRScanner: React.FC<QRScannerProps> = ({ onScanSuccess, onScanError, isAct
     }
 
     return () => {
+      // Cleanup khi component unmount
       if (scannerRef.current) {
-        scannerRef.current.clear().catch(console.error);
+        try {
+          scannerRef.current.clear().catch(() => {
+            // Ignore cleanup errors
+          });
+        } catch (error) {
+          // Ignore cleanup errors
+          console.warn('Scanner cleanup warning:', error);
+        }
+        scannerRef.current = null;
       }
     };
   }, [isActive, isScanning]);
@@ -71,7 +80,8 @@ const QRScanner: React.FC<QRScannerProps> = ({ onScanSuccess, onScanError, isAct
             (decodedText: string) => {
               console.log('QR Code detected:', decodedText);
               onScanSuccess(decodedText);
-              stopScanner();
+              // Delay stop để tránh DOM conflict
+              setTimeout(() => stopScanner(), 100);
             },
             (error: string) => {
               // Chỉ log lỗi nghiêm trọng, bỏ qua lỗi thường xuyên
@@ -136,12 +146,27 @@ const QRScanner: React.FC<QRScannerProps> = ({ onScanSuccess, onScanError, isAct
 
   const stopScanner = () => {
     if (scannerRef.current) {
-      scannerRef.current.clear()
-        .then(() => {
-          scannerRef.current = null;
-          setIsScanning(false);
-        })
-        .catch(console.error);
+      try {
+        scannerRef.current.clear()
+          .then(() => {
+            scannerRef.current = null;
+            setIsScanning(false);
+            setDebugInfo('Scanner đã dừng');
+          })
+          .catch((error) => {
+            console.warn('Scanner stop warning:', error);
+            // Force cleanup even if clear() fails
+            scannerRef.current = null;
+            setIsScanning(false);
+            setDebugInfo('Scanner đã dừng (force)');
+          });
+      } catch (error) {
+        console.warn('Scanner stop error:', error);
+        // Force cleanup
+        scannerRef.current = null;
+        setIsScanning(false);
+        setDebugInfo('Scanner đã dừng (error)');
+      }
     }
   };
 
