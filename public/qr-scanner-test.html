@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Scanner Test</title>
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        #qr-reader {
+            width: 100%;
+            min-height: 300px;
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            background: #f9f9f9;
+        }
+        
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px 5px;
+        }
+        
+        button:hover {
+            background: #0056b3;
+        }
+        
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .message {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            background: #e7f3ff;
+            border: 1px solid #b3d9ff;
+        }
+        
+        .error {
+            background: #ffe7e7;
+            border-color: #ffb3b3;
+            color: #d00;
+        }
+        
+        .success {
+            background: #e7ffe7;
+            border-color: #b3ffb3;
+            color: #0a0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>QR Scanner Test</h1>
+        <p>Trang này để test QR scanner hoạt động có đúng không.</p>
+        
+        <div>
+            <button id="start-btn" onclick="startScanner()">Bắt đầu Scanner</button>
+            <button id="stop-btn" onclick="stopScanner()" disabled>Dừng Scanner</button>
+        </div>
+        
+        <div id="message" class="message" style="display: none;"></div>
+        
+        <div id="qr-reader"></div>
+        
+        <div id="result" style="margin-top: 20px;"></div>
+    </div>
+
+    <script>
+        let html5QrcodeScanner = null;
+        let isScanning = false;
+
+        function showMessage(text, type = 'info') {
+            const messageDiv = document.getElementById('message');
+            messageDiv.textContent = text;
+            messageDiv.className = `message ${type}`;
+            messageDiv.style.display = 'block';
+            
+            if (type !== 'error') {
+                setTimeout(() => {
+                    messageDiv.style.display = 'none';
+                }, 5000);
+            }
+        }
+
+        function startScanner() {
+            if (isScanning) return;
+            
+            showMessage('Đang khởi động camera...', 'info');
+            
+            // Kiểm tra quyền camera trước
+            navigator.mediaDevices.getUserMedia({ video: true })
+                .then(stream => {
+                    // Dừng stream test
+                    stream.getTracks().forEach(track => track.stop());
+                    
+                    showMessage('Đã có quyền camera, đang khởi động scanner...', 'info');
+                    
+                    const config = {
+                        fps: 10,
+                        qrbox: { width: 250, height: 250 },
+                        aspectRatio: 1.0,
+                        supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA],
+                        showTorchButtonIfSupported: true,
+                        showZoomSliderIfSupported: true,
+                        videoConstraints: {
+                            facingMode: "environment",
+                            width: { ideal: 640 },
+                            height: { ideal: 480 }
+                        }
+                    };
+
+                    html5QrcodeScanner = new Html5QrcodeScanner("qr-reader", config, false);
+                    
+                    html5QrcodeScanner.render(
+                        (decodedText) => {
+                            showMessage(`QR Code detected: ${decodedText}`, 'success');
+                            document.getElementById('result').innerHTML = `
+                                <h3>Kết quả quét:</h3>
+                                <p><strong>${decodedText}</strong></p>
+                                <p><small>Thời gian: ${new Date().toLocaleString()}</small></p>
+                            `;
+                        },
+                        (error) => {
+                            // Chỉ log lỗi nghiêm trọng
+                            if (!error.includes('NotFoundException')) {
+                                console.warn('QR scan error:', error);
+                            }
+                        }
+                    );
+                    
+                    isScanning = true;
+                    document.getElementById('start-btn').disabled = true;
+                    document.getElementById('stop-btn').disabled = false;
+                    showMessage('Scanner đã khởi động thành công!', 'success');
+                })
+                .catch(error => {
+                    console.error('Camera error:', error);
+                    let errorMessage = 'Không thể truy cập camera';
+                    
+                    if (error.name === 'NotAllowedError') {
+                        errorMessage = 'Bạn cần cho phép truy cập camera để quét QR code';
+                    } else if (error.name === 'NotFoundError') {
+                        errorMessage = 'Không tìm thấy camera trên thiết bị';
+                    } else if (error.name === 'NotSupportedError') {
+                        errorMessage = 'Trình duyệt không hỗ trợ camera';
+                    } else if (error.name === 'NotReadableError') {
+                        errorMessage = 'Camera đang được sử dụng bởi ứng dụng khác';
+                    }
+                    
+                    showMessage(errorMessage, 'error');
+                });
+        }
+
+        function stopScanner() {
+            if (html5QrcodeScanner && isScanning) {
+                html5QrcodeScanner.clear()
+                    .then(() => {
+                        html5QrcodeScanner = null;
+                        isScanning = false;
+                        document.getElementById('start-btn').disabled = false;
+                        document.getElementById('stop-btn').disabled = true;
+                        showMessage('Scanner đã dừng', 'info');
+                    })
+                    .catch(console.error);
+            }
+        }
+
+        // Tự động dọn dẹp khi trang đóng
+        window.addEventListener('beforeunload', () => {
+            if (html5QrcodeScanner) {
+                html5QrcodeScanner.clear().catch(console.error);
+            }
+        });
+    </script>
+</body>
+</html>

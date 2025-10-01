@@ -10,6 +10,7 @@ interface QRScannerProps {
 const QRScanner: React.FC<QRScannerProps> = ({ onScanSuccess, onScanError, isActive }) => {
   const scannerRef = useRef<Html5QrcodeScanner | null>(null);
   const [isScanning, setIsScanning] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     if (isActive && !isScanning) {
@@ -27,8 +28,12 @@ const QRScanner: React.FC<QRScannerProps> = ({ onScanSuccess, onScanError, isAct
 
   const startScanner = async () => {
     try {
+      setIsLoading(true);
+      console.log('Starting QR scanner...');
+      
       // Kiểm tra quyền camera trước
       const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      console.log('Camera permission granted, stream:', stream);
       stream.getTracks().forEach(track => track.stop()); // Dừng stream test
       
       const config = {
@@ -39,27 +44,42 @@ const QRScanner: React.FC<QRScannerProps> = ({ onScanSuccess, onScanError, isAct
         showTorchButtonIfSupported: true,
         showZoomSliderIfSupported: true,
         defaultZoomValueIfSupported: 2,
+        // Đảm bảo camera hiển thị đầy đủ
+        videoConstraints: {
+          facingMode: "environment", // Camera sau
+          width: { ideal: 640 },
+          height: { ideal: 480 }
+        },
+        // Cấu hình hiển thị
+        rememberLastUsedCamera: true,
+        useBarCodeDetectorIfSupported: true
       };
 
-      const scanner = new Html5QrcodeScanner("qr-reader", config, false);
-      
-      scanner.render(
-        (decodedText: string) => {
-          console.log('QR Code detected:', decodedText);
-          onScanSuccess(decodedText);
-          stopScanner();
-        },
-        (error: string) => {
-          // Chỉ log lỗi nghiêm trọng, bỏ qua lỗi thường xuyên
-          if (!error.includes('NotFoundException')) {
-            console.warn('QR scan error:', error);
-            onScanError?.(error);
+      // Đợi một chút để đảm bảo DOM đã sẵn sàng
+      setTimeout(() => {
+        const scanner = new Html5QrcodeScanner("qr-reader", config, false);
+        console.log('Scanner created, rendering...');
+        
+        scanner.render(
+          (decodedText: string) => {
+            console.log('QR Code detected:', decodedText);
+            onScanSuccess(decodedText);
+            stopScanner();
+          },
+          (error: string) => {
+            // Chỉ log lỗi nghiêm trọng, bỏ qua lỗi thường xuyên
+            if (!error.includes('NotFoundException')) {
+              console.warn('QR scan error:', error);
+              onScanError?.(error);
+            }
           }
-        }
-      );
+        );
 
-      scannerRef.current = scanner;
-      setIsScanning(true);
+        scannerRef.current = scanner;
+        setIsScanning(true);
+        setIsLoading(false);
+        console.log('Scanner started successfully');
+      }, 100);
     } catch (error) {
       console.error('Camera access error:', error);
       let errorMessage = 'Không thể truy cập camera';
@@ -78,6 +98,7 @@ const QRScanner: React.FC<QRScannerProps> = ({ onScanSuccess, onScanError, isAct
       
       onScanError?.(errorMessage);
       setIsScanning(false);
+      setIsLoading(false);
     }
   };
 
@@ -94,7 +115,32 @@ const QRScanner: React.FC<QRScannerProps> = ({ onScanSuccess, onScanError, isAct
 
   return (
     <div className="w-full">
-      <div id="qr-reader" className="w-full"></div>
+      <div 
+        id="qr-reader" 
+        className="w-full min-h-[300px] bg-gray-100 rounded-lg overflow-hidden relative"
+        style={{ 
+          minHeight: '300px',
+          width: '100%',
+          position: 'relative'
+        }}
+      >
+        {isLoading && (
+          <div className="absolute inset-0 flex items-center justify-center bg-gray-100 rounded-lg">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600 mx-auto mb-4"></div>
+              <p className="text-gray-600">Đang khởi động camera...</p>
+            </div>
+          </div>
+        )}
+        
+        {isActive && !isLoading && !isScanning && (
+          <div className="absolute inset-0 flex items-center justify-center bg-gray-100 rounded-lg">
+            <div className="text-center text-gray-500">
+              <p>Khu vực camera sẽ hiển thị ở đây</p>
+            </div>
+          </div>
+        )}
+      </div>
       {isActive && (
         <div className="mt-4 text-center">
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
@@ -106,6 +152,53 @@ const QRScanner: React.FC<QRScannerProps> = ({ onScanSuccess, onScanError, isAct
             </p>
           </div>
         </div>
+      )}
+      
+      {/* CSS để đảm bảo camera hiển thị đúng */}
+      {/* Global CSS để đảm bảo camera hiển thị đúng */}
+      {isActive && (
+        <style dangerouslySetInnerHTML={{
+          __html: `
+            #qr-reader video {
+              width: 100% !important;
+              height: auto !important;
+              border-radius: 8px !important;
+              max-width: 100% !important;
+            }
+            
+            #qr-reader canvas {
+              width: 100% !important;
+              height: auto !important;
+              border-radius: 8px !important;
+              max-width: 100% !important;
+            }
+            
+            #qr-reader > div {
+              border: none !important;
+              width: 100% !important;
+            }
+            
+            #qr-reader__dashboard {
+              background: transparent !important;
+            }
+            
+            #qr-reader__dashboard_section {
+              background: white !important;
+              border-radius: 8px !important;
+              margin-top: 10px !important;
+              padding: 10px !important;
+            }
+            
+            #qr-reader__scan_region {
+              width: 100% !important;
+            }
+            
+            #qr-reader__scan_region video {
+              width: 100% !important;
+              height: auto !important;
+            }
+          `
+        }} />
       )}
     </div>
   );
